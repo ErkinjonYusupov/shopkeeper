@@ -38,7 +38,7 @@ class _SplashState extends State<Splash> {
               const SizedBox(height: 24),
               CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AppColors.primary,
+                color: AppColors.primary
               )
             ],
           ),

@@ -8,5 +8,7 @@ export 'package:shopkeeper/config/icons.dart';
 export 'package:shopkeeper/config/colors.dart';
 export 'package:shopkeeper/pages/splash.dart';
 export 'dart:async';
+export 'package:shopkeeper/models/menu_model.dart';
+
 
 
