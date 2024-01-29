@@ -1,4 +1,6 @@
+import 'package:shopkeeper/components/default/confirm_dialog.dart';
 import 'package:shopkeeper/config/imports.dart';
+import 'package:shopkeeper/models/category.dart';
 
 class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key});
@@ -21,72 +23,103 @@ class _CategoriesPageState extends State<CategoriesPage> {
     return GetBuilder<CategoriesController>(
       builder: (controller) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text("Kategoriyalar"),
-            centerTitle: false,
-            actions: [
+            appBar: AppBar(
+              title: const Text("Kategoriyalar"),
+              centerTitle: false,
+              actions: [
+                IconButton(
+                    onPressed: () {
+                      controller.selected = null;
+                      controller.title.clear();
+                      Get.dialog(
+                          barrierDismissible: false,
+                          AddCategoryDialog(controller: controller));
+                    },
+                    icon: const Icon(Icons.add_circle, size: 35))
+              ],
+            ),
+            body: controller.loading
+                ? Center(
+                    child: CircularProgressIndicator(
+                    color: AppColors.primary,
+                  ))
+                : ListView(
+                    children:
+                        List.generate(controller.categories.length, (index) {
+                      return CategoryCard(
+                          item: controller.categories[index],
+                          controller: controller);
+                    }),
+                  ));
+      },
+    );
+  }
+}
+
+class CategoryCard extends StatelessWidget {
+  CategoryCard({super.key, required this.item, required this.controller});
+  CategoryModel item;
+  CategoriesController controller;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      constraints: const BoxConstraints(maxWidth: 500),
+      decoration: BoxDecoration(
+          color: AppColors.white, borderRadius: BorderRadius.circular(24)),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(item.title,
+                  style: TextStyle(
+                      color: AppColors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700)),
+              const Spacer(),
               IconButton(
                   onPressed: () {
+                    controller.selected = item;
+                    controller.title.text = item.title;
                     Get.dialog(
                         barrierDismissible: false,
                         AddCategoryDialog(controller: controller));
                   },
-                  icon: const Icon(Icons.add_circle, size: 35))
+                  icon: Icon(
+                    Icons.edit,
+                    size: 20,
+                    color: AppColors.green5,
+                  ))
             ],
           ),
-          body: ListView(
+          Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-                constraints: const BoxConstraints(maxWidth: 500),
-                decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(24)),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Text("Sut mahsulotlari",
-                            style: TextStyle(
-                                color: AppColors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700)),
-                        const Spacer(),
-                        IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.edit,
-                              size: 20,
-                              color: AppColors.green5,
-                            ))
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          "Faol",
-                          style: TextStyle(
-                              color: AppColors.grey4,
-                              fontWeight: FontWeight.w400),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.check_box,
-                              size: 20,
-                              color: AppColors.green5,
-                            ))
-                      ],
-                    ),
-                  ],
-                ),
-              )
+              Text(
+                item.active == 1 ? "Faol" : "Nofaol",
+                style: TextStyle(
+                    color: item.active == 1 ? AppColors.green5 : Colors.red,
+                    fontWeight: FontWeight.w600),
+              ),
+              const Spacer(),
+              IconButton(
+                  onPressed: () {
+                    controller.selected = item;
+                    Get.dialog(ConfirmDialog(
+                      title: "Diqqat",
+                      text:
+                          "Siz rostan ${item.title} kategoriyasini ${item.active == 1 ? 'nofaollashtirishni' : 'faollashtirishni'}  tasdiqlamoqchimisiz?",
+                      onTap: () {
+                        controller.editActive();
+                      },
+                    ));
+                  },
+                  icon:
+                      Icon(Icons.check_box, size: 20, color: AppColors.green5))
             ],
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -106,8 +139,10 @@ class AddCategoryDialog extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Text(
-                  "Kategory qo'shish",
+                Text(
+                  controller.selected == null
+                      ? "Kategoriya qo'shish"
+                      : "Kategoriya tahrirlash",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
                 const Spacer(),
@@ -141,7 +176,11 @@ class AddCategoryDialog extends StatelessWidget {
             const SizedBox(height: 20),
             InkWell(
               onTap: () {
-                controller.create();
+                if (controller.selected == null) {
+                  controller.create();
+                } else {
+                  controller.edit();
+                }
               },
               child: Container(
                 width: double.maxFinite,
@@ -150,7 +189,7 @@ class AddCategoryDialog extends StatelessWidget {
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(14)),
                 child: Text(
-                  "Qo'shish",
+                  controller.selected == null ? "Qo'shish" : "Tahrirlash",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: AppColors.white,
